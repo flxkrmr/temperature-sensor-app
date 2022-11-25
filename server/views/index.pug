@@ -10,8 +10,10 @@ block layout-content
       a(href="/start") Messung starten
     div.Files
       h3 Files
+      if !files.length
+        div Keine Dateien vorhanden
       table(style='width:100%')
-        each val in files.length ? files : ['There are no values']
+        each val in files
           tr(style='width:100%')
             td(style='width:20%')
               a(href="/measurements/" + val) #{val}
