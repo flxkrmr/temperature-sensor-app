@@ -1,0 +1,9 @@
+extends layout
+
+block layout-content
+  div.View
+    h1.Banner Heizungs Logger
+    span Datei #{measuringFilename} wirklich löschen?
+    form(method="post", url="/delete")
+        p.Button
+            input(type="submit", value="Löschen")

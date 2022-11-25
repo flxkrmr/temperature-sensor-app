@@ -10,7 +10,10 @@ block layout-content
       a(href="/start") Messung starten
     div.Files
       h3 Files
-      ul
+      table(style='width:100%')
         each val in files.length ? files : ['There are no values']
-          li
-            a(href="/measurements/" + val) #{val}
+          tr(style='width:100%')
+            td(style='width:20%')
+              a(href="/measurements/" + val) #{val}
+            td
+              a(href="/delete/" + val) löschen?

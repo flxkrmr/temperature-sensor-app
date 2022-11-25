@@ -75,6 +75,20 @@ app.post('/start', (req, res) => {
   res.redirect("/");
 })
 
+app.get('/delete/:filename', (req, res) => {
+  res.render("delete", { 
+    title: "Löschen",
+    measuringFilename: req.params.filename
+  });
+})
+
+app.post('/delete/:filename', (req, res) => {
+  console.log(measurementsFolder + req.params.filename);
+  // I think this is evil!
+  fs.unlinkSync(measurementsFolder + req.params.filename);
+  res.redirect("/");
+})
+
 app.listen(port, () => {
   console.log(`App listening on port ${port}`)
 })
