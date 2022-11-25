@@ -68,7 +68,7 @@ app.post('/start', (req, res) => {
   var settings = JSON.parse(fs.readFileSync(settingsFile));
   settings['measuring'] = true,
   settings['fileName'] = req.body.filename,
-  settings['intervalSeconds'] = req.body.interval,
+  settings['intervalSeconds'] = parseInt(req.body.interval, 10),
 
   fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 4));
 
