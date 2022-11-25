@@ -2,4 +2,4 @@
 Description=Webserver to configure temperature sensors
 
 [Service]
-ExecStart=node /home/pi/temperature-app/server/server.js
+ExecStart=node /home/pi/temperature-sensor-app/server/server.js

@@ -1,5 +1,9 @@
 [Unit]
-Description=Webserver to configure temperature sensors
+Description=Temperature Sensor Daemon
 
 [Service]
-ExecStart=/home/pi/temperature-app/run.sh
+Type=simple
+ExecStart=python3 /home/pi/temperature-sensor-app/thermometer.py
+
+[Install]
+WantedBy=multi-user.target
