@@ -4,7 +4,8 @@ import datetime
 import logging
 import os
 from os.path import exists
-#import schedule
+import schedule
+import time
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -19,7 +20,10 @@ CSV_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 SETTINGS_FILE = "settings.json"
 
 def main():
-    run_measurement()
+    schedule.every(10).seconds.do(run_measurement)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 def open_settings():
     with open(SETTINGS_FILE) as settings_file:
