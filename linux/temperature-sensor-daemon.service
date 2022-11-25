@@ -1,0 +1,5 @@
+[Unit]
+Description=Webserver to configure temperature sensors
+
+[Service]
+ExecStart=/home/pi/temperature-app/run.sh
