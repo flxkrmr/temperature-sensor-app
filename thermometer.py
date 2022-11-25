@@ -12,12 +12,13 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %I:%M:%S')
 
-SENSOR_DIR = "/sys-test/bus/w1/devices"
+
+SENSOR_DIR = "/sys/bus/w1/devices"
 SENSOR_FILE_NAME = "temperature"
-MEASUREMENTS_DIR = "measurements"
+MEASUREMENTS_DIR = "/home/pi/temperature-sensor-app/measurements"
 CSV_DELIMITER = ";"
 CSV_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
-SETTINGS_FILE = "settings.json"
+SETTINGS_FILE = "/home/pi/temperature-sensor-app/settings.json"
 
 def main():
     schedule.every(10).seconds.do(run_measurement)
@@ -57,7 +58,7 @@ def prepare_sensor_list(settings):
     
     return sensors
 
-def prepare_measurements_file(measurements_file_name):
+def prepare_measurements_file(measurements_file_name, sensors):
     header_line = "date" + CSV_DELIMITER + CSV_DELIMITER.join(map(lambda x: x['name'], sensors))
     logging.debug(header_line)
     with open(measurements_file_name, "w") as data_file:
@@ -80,7 +81,7 @@ def read_sensors(sensors):
 def update_last_measurement_time(time, settings):
     new_settings = settings
     new_settings['lastMeasurement'] = time.isoformat()
-    logging.debug(json.dumps(new_settings, indent=4))
+    #logging.debug(json.dumps(new_settings, indent=4))
 
     with open(SETTINGS_FILE, 'w') as settings_file:
         settings_file.write(json.dumps(new_settings, indent=4))
@@ -97,7 +98,7 @@ def run_measurement():
     logging.debug("Seconds since last measurement: " + str(seconds_since_last_measurement))
     if(seconds_since_last_measurement < settings['intervalSeconds']):
         logging.debug("Not yet time to measure")
-        sys.exit()
+        return
 
     logging.debug("Doing new measurment")
     sensors = prepare_sensor_list(settings)            
@@ -106,7 +107,7 @@ def run_measurement():
     measurements_file_name = MEASUREMENTS_DIR + "/" + settings['fileName']
     if not exists(measurements_file_name):
         logging.info("Creating new file " + measurements_file_name)
-        prepare_measurements_file(measurements_file_name)
+        prepare_measurements_file(measurements_file_name, sensors)
 
     measurements = read_sensors(sensors)    
     logging.info("Measured values: " + str(measurements))
