@@ -4,6 +4,7 @@ import datetime
 import logging
 import os
 from os.path import exists
+#import schedule
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -18,7 +19,9 @@ CSV_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 SETTINGS_FILE = "settings.json"
 
 def main():
-    logging.debug('Starting papas thermometer app...')
+    run_measurement()
+
+def open_settings():
     with open(SETTINGS_FILE) as settings_file:
         settings = json.load(settings_file)
 
@@ -26,21 +29,11 @@ def main():
         logging.debug("Nothing to do. Bye!")
         sys.exit()
     
-    now = datetime.datetime.now()
-    last_measurement = datetime.datetime.fromisoformat(settings['lastMeasurement'])
-    seconds_since_last_measurement = (now - last_measurement).seconds
+    return settings
 
-    logging.debug("Seconds since last measurement: " + str(seconds_since_last_measurement))
-    if(seconds_since_last_measurement < settings['intervalSeconds']):
-        logging.debug("Not yet time to debug")
-        sys.exit()
-
-    logging.debug("Doing new measurment")
-
-    sensors_folders = os.listdir(SENSOR_DIR)
-
-    # prepare sensor list
+def prepare_sensor_list(settings):
     sensors = []
+    sensors_folders = os.listdir(SENSOR_DIR)
     for s in sensors_folders:
         sensor_name = s
         sensor_enabled = True
@@ -57,19 +50,17 @@ def main():
                 "file": sensor_file,
                 "name": sensor_name,
             })
-            
-    logging.debug("Sensors: " + str(sensors))
+    
+    return sensors
 
-    # prepare file if not exists
-    measurements_file_name = MEASUREMENTS_DIR + "/" + settings['fileName']
-    if not exists(measurements_file_name):
-        logging.info("Creating new file " + measurements_file_name)
-        header_line = "date" + CSV_DELIMITER + CSV_DELIMITER.join(map(lambda x: x['name'], sensors))
-        logging.debug(header_line)
-        with open(measurements_file_name, "w") as data_file:
-            data_file.write("sep=" + CSV_DELIMITER + "\n")
-            data_file.write(header_line + "\n")
+def prepare_measurements_file(measurements_file_name):
+    header_line = "date" + CSV_DELIMITER + CSV_DELIMITER.join(map(lambda x: x['name'], sensors))
+    logging.debug(header_line)
+    with open(measurements_file_name, "w") as data_file:
+        data_file.write("sep=" + CSV_DELIMITER + "\n")
+        data_file.write(header_line + "\n")
 
+def read_sensors(sensors):
     measurements = []
     for sensor in sensors:
         if not exists(sensor['file']):
@@ -80,6 +71,40 @@ def main():
                 temp = str(int(sensor_file.read()) / 1000.0)
                 measurements.append(temp)
     
+    return measurements
+
+def update_last_measurement_time(time, settings):
+    new_settings = settings
+    new_settings['lastMeasurement'] = time.isoformat()
+    logging.debug(json.dumps(new_settings, indent=4))
+
+    with open(SETTINGS_FILE, 'w') as settings_file:
+        settings_file.write(json.dumps(new_settings, indent=4))
+
+def run_measurement():
+    logging.debug('Starting papas thermometer app...')
+    
+    settings = open_settings()
+    
+    now = datetime.datetime.now()
+    last_measurement = datetime.datetime.fromisoformat(settings['lastMeasurement'])
+    seconds_since_last_measurement = (now - last_measurement).seconds
+
+    logging.debug("Seconds since last measurement: " + str(seconds_since_last_measurement))
+    if(seconds_since_last_measurement < settings['intervalSeconds']):
+        logging.debug("Not yet time to measure")
+        sys.exit()
+
+    logging.debug("Doing new measurment")
+    sensors = prepare_sensor_list(settings)            
+    logging.debug("Sensors: " + str(sensors))
+
+    measurements_file_name = MEASUREMENTS_DIR + "/" + settings['fileName']
+    if not exists(measurements_file_name):
+        logging.info("Creating new file " + measurements_file_name)
+        prepare_measurements_file(measurements_file_name)
+
+    measurements = read_sensors(sensors)    
     logging.info("Measured values: " + str(measurements))
 
     measurements_line = now.strftime(CSV_DATE_FORMAT) + CSV_DELIMITER + CSV_DELIMITER.join(measurements) + "\n"
@@ -87,12 +112,7 @@ def main():
     with open(measurements_file_name, "a") as data_file:
         data_file.write(measurements_line)
 
-    new_settings = settings
-    new_settings['lastMeasurement'] = now.isoformat()
-    logging.debug(json.dumps(new_settings, indent=4))
-
-    with open(SETTINGS_FILE, 'w') as settings_file:
-        settings_file.write(json.dumps(new_settings, indent=4))
+    update_last_measurement_time(now, settings)
 
     logging.debug("Measuring done, bye!")
 
