@@ -1,3 +1,8 @@
-measurements
+measurements/*
+!measurements/empty.txt
+
+logs/*
+!logs/empty.txt
+
 server/node_modules
 settings.json
