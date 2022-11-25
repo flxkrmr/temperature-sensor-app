@@ -1,0 +1,20 @@
+/* public/style.css */
+
+body {
+    background: #353531;
+    color: white;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+h1 {
+    color: #EC4E20
+}
+
+h2 {
+    color: #FF9505
+}
+
+a {
+    color: #FF9505 
+}
+

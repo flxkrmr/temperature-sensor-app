@@ -1,0 +1,18 @@
+extends layout
+
+block layout-content
+  div.View
+    h1.Banner Heizungs Logger
+    if measuring
+      h2.Status Aktuell läuft bereits eine Messung
+    else
+      span Neue Messung starten?
+      form(method="post")
+        p
+          label(for="filename") Filename:
+          input(type="text", name="filename", value=measuringfilename)
+        p
+          label(for="interval") Interval (s):
+          input(type="number", name="interval", value=interval)
+        p.Button
+          input(type="submit", value="Start")

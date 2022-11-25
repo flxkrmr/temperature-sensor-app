@@ -1,0 +1,16 @@
+extends layout
+
+block layout-content
+  div.View
+    h1.Banner Heizungs Logger
+    if measuring
+      h2.Status Messung läuft!
+      a(href="/stop") Stoppen
+    else
+      a(href="/start") Messung starten
+    div.Files
+      h3 Files
+      ul
+        each val in files.length ? files : ['There are no values']
+          li
+            a(href="/measurements/" + val) #{val}

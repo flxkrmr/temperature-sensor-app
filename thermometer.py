@@ -1,0 +1,101 @@
+import json
+import sys
+import datetime
+import logging
+import os
+from os.path import exists
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %I:%M:%S')
+
+SENSOR_DIR = "/sys-test/bus/w1/devices"
+SENSOR_FILE_NAME = "temperature"
+MEASUREMENTS_DIR = "measurements"
+CSV_DELIMITER = ";"
+CSV_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+SETTINGS_FILE = "settings.json"
+
+def main():
+    logging.debug('Starting papas thermometer app...')
+    with open(SETTINGS_FILE) as settings_file:
+        settings = json.load(settings_file)
+
+    if not settings['measuring']:
+        logging.debug("Nothing to do. Bye!")
+        sys.exit()
+    
+    now = datetime.datetime.now()
+    last_measurement = datetime.datetime.fromisoformat(settings['lastMeasurement'])
+    seconds_since_last_measurement = (now - last_measurement).seconds
+
+    logging.debug("Seconds since last measurement: " + str(seconds_since_last_measurement))
+    if(seconds_since_last_measurement < settings['intervalSeconds']):
+        logging.debug("Not yet time to debug")
+        sys.exit()
+
+    logging.debug("Doing new measurment")
+
+    sensors_folders = os.listdir(SENSOR_DIR)
+
+    # prepare sensor list
+    sensors = []
+    for s in sensors_folders:
+        sensor_name = s
+        sensor_enabled = True
+        for mapping in settings['sensorMapping']:
+            if mapping["id"] == s:
+                sensor_name = mapping["name"]
+                sensor_enabled = mapping["enabled"]
+                break
+        
+        sensor_file = SENSOR_DIR + '/' + s + '/' + SENSOR_FILE_NAME
+
+        if (sensor_enabled):
+            sensors.append({
+                "file": sensor_file,
+                "name": sensor_name,
+            })
+            
+    logging.debug("Sensors: " + str(sensors))
+
+    # prepare file if not exists
+    measurements_file_name = MEASUREMENTS_DIR + "/" + settings['fileName']
+    if not exists(measurements_file_name):
+        logging.info("Creating new file " + measurements_file_name)
+        header_line = "date" + CSV_DELIMITER + CSV_DELIMITER.join(map(lambda x: x['name'], sensors))
+        logging.debug(header_line)
+        with open(measurements_file_name, "w") as data_file:
+            data_file.write("sep=" + CSV_DELIMITER + "\n")
+            data_file.write(header_line + "\n")
+
+    measurements = []
+    for sensor in sensors:
+        if not exists(sensor['file']):
+            logging.warning("Sensor file not found: " + str(sensor))
+            measurements.append("Error")
+        else:
+            with open(sensor['file']) as sensor_file:
+                temp = str(int(sensor_file.read()) / 1000.0)
+                measurements.append(temp)
+    
+    logging.info("Measured values: " + str(measurements))
+
+    measurements_line = now.strftime(CSV_DATE_FORMAT) + CSV_DELIMITER + CSV_DELIMITER.join(measurements) + "\n"
+    logging.debug("Add line to file: " + measurements_line)
+    with open(measurements_file_name, "a") as data_file:
+        data_file.write(measurements_line)
+
+    new_settings = settings
+    new_settings['lastMeasurement'] = now.isoformat()
+    logging.debug(json.dumps(new_settings, indent=4))
+
+    with open(SETTINGS_FILE, 'w') as settings_file:
+        settings_file.write(json.dumps(new_settings, indent=4))
+
+    logging.debug("Measuring done, bye!")
+
+
+if __name__ == '__main__':
+    main()

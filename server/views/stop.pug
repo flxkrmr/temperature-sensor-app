@@ -1,0 +1,12 @@
+extends layout
+
+block layout-content
+  div.View
+    h1.Banner Heizungs Logger
+    if measuring
+      span Wirklich stoppen?
+      form(method="post")
+        p.buttons
+          input(type="submit", value="Ja")
+    else
+      h2.Status Aktuell läuft keine Messung

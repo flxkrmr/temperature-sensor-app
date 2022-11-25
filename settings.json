@@ -1,0 +1,18 @@
+{
+    "measuring": true,
+    "intervalSeconds": "62",
+    "lastMeasurement": "2022-11-23T12:47:52.301951",
+    "fileName": "SomeFileOther-2022-02.csv",
+    "sensorMapping": [
+        {
+            "id": "12345",
+            "name": "Sensor 1",
+            "enabled": true
+        },
+        {
+            "id": "23456",
+            "name": "Sensor 2",
+            "enabled": true
+        }
+    ]
+}
