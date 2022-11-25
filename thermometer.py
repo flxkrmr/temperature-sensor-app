@@ -29,10 +29,6 @@ def main():
 def open_settings():
     with open(SETTINGS_FILE) as settings_file:
         settings = json.load(settings_file)
-
-    if not settings['measuring']:
-        logging.debug("Nothing to do. Bye!")
-        sys.exit()
     
     return settings
 
@@ -78,7 +74,8 @@ def read_sensors(sensors):
     
     return measurements
 
-def update_last_measurement_time(time, settings):
+def update_last_measurement_time(time):
+    settings = open_settings()
     new_settings = settings
     new_settings['lastMeasurement'] = time.isoformat()
     #logging.debug(json.dumps(new_settings, indent=4))
@@ -90,6 +87,10 @@ def run_measurement():
     logging.debug('Starting papas thermometer app...')
     
     settings = open_settings()
+
+    if not settings['measuring']:
+        logging.debug("Nothing to do. Bye!")
+        return
     
     now = datetime.datetime.now()
     last_measurement = datetime.datetime.fromisoformat(settings['lastMeasurement'])
@@ -117,7 +118,7 @@ def run_measurement():
     with open(measurements_file_name, "a") as data_file:
         data_file.write(measurements_line)
 
-    update_last_measurement_time(now, settings)
+    update_last_measurement_time(now)
 
     logging.debug("Measuring done, bye!")
 
