@@ -69,7 +69,7 @@ def read_sensors(sensors):
             measurements.append("Error")
         else:
             with open(sensor['file']) as sensor_file:
-                temp = str(int(sensor_file.read()) / 1000.0)
+                temp = str(int(sensor_file.read()) / 1000.0).replace(".", ",")
                 measurements.append(temp)
     
     return measurements
